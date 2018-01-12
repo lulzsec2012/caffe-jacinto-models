@@ -18,7 +18,7 @@ echo Logging output to "$LOG"
 caffe="../../caffe-jacinto/build/tools/caffe.bin"
 
 #-------------------------------------------------------
-gpus="0"
+gpus="0,1"
 max_iter=64000
 base_lr=0.1
 type=SGD
@@ -38,9 +38,7 @@ config_param="{'config_name':'$config_name','model_name':'$model_name','dataset'
 'accum_batch_size':$batch_size,'batch_size':$batch_size,\
 'train_data':'./data/cifar10_train_lmdb','test_data':'./data/cifar10_test_lmdb',\
 'num_test_image':10000,'test_batch_size':50}"
-#python ./models/image_classification.py --config_param="$config_param" --solver_param="$solver_param"
-echo "python ./models/image_classification.py --config_param="$config_param" --solver_param="$solver_param""
-python ./models/image_classification.py --config_param="$config_param" --solver_param="$solver_param"
+##python ./models/image_classification.py --config_param="$config_param" --solver_param="$solver_param"
 config_name_prev=$config_name
 
 #-------------------------------------------------------
@@ -63,7 +61,7 @@ config_param="{'config_name':'$config_name','model_name':'$model_name','dataset'
 'train_data':'./data/cifar10_train_lmdb','test_data':'./data/cifar10_test_lmdb',\
 'num_test_image':10000,'test_batch_size':50}" 
 
-python ./models/image_classification.py --config_param="$config_param" --solver_param=$l1reg_solver_param
+##python ./models/image_classification.py --config_param="$config_param" --solver_param=$l1reg_solver_param
 config_name_prev=$config_name
 
 #-------------------------------------------------------
@@ -89,7 +87,7 @@ config_param="{'config_name':'$config_name','model_name':'$model_name','dataset'
 'train_data':'./data/cifar10_train_lmdb','test_data':'./data/cifar10_test_lmdb',\
 'num_test_image':10000,'test_batch_size':50}" 
 
-python ./models/image_classification.py --config_param="$config_param" --solver_param=$sparse_solver_param
+##python ./models/image_classification.py --config_param="$config_param" --solver_param=$sparse_solver_param
 config_name_prev=$config_name
 
 
@@ -111,10 +109,11 @@ config_param="{'config_name':'$config_name','model_name':'$model_name','dataset'
 'num_test_image':10000,'test_batch_size':50,\
 'caffe':'$caffe test'}" 
 
-python ./models/image_classification.py --config_param="$config_param" --solver_param=$test_solver_param
+##python ./models/image_classification.py --config_param="$config_param" --solver_param=$test_solver_param
 #config_name_prev=$config_name
 
 
+config_name_prev=training/cifar10_jacintonet11v2_2017-12-21_17-34-03/test
 #-------------------------------------------------------
 #test_quantize
 stage="test_quantize"
@@ -136,16 +135,54 @@ config_param="{'config_name':'$config_name','model_name':'$model_name','dataset'
 python ./models/image_classification.py --config_param="$config_param" --solver_param=$test_solver_param
 
 echo "quantize: true" > $config_name/deploy_new.prototxt
+echo """
+net_quantization_param {
+  power2_range : false
+  bitwidth_activations:8
+  bitwidth_weights:8
+  quantize_activations : true
+  quantize_weights : false
+  apply_offset_activations : false
+  apply_offset_weights : false
+}
+""" >> $config_name/deploy_new.prototxt
+
 cat $config_name/deploy.prototxt >> $config_name/deploy_new.prototxt
 mv --force $config_name/deploy_new.prototxt $config_name/deploy.prototxt
 
 echo "quantize: true" > $config_name/test_new.prototxt
+echo """
+net_quantization_param {
+  power2_range : false
+  bitwidth_activations:8
+  bitwidth_weights:8
+  quantize_activations : true
+  quantize_weights : false
+  apply_offset_activations : false
+  apply_offset_weights : false
+}
+""" >> $config_name/test_new.prototxt
 cat $config_name/test.prototxt >> $config_name/test_new.prototxt
 mv --force $config_name/test_new.prototxt $config_name/test.prototxt
 
+echo "quantize: true" > $config_name/train_new.prototxt
+echo """
+net_quantization_param {
+  power2_range : false
+  bitwidth_activations:8
+  bitwidth_weights:8
+  quantize_activations : true
+  quantize_weights : false
+  apply_offset_activations : false
+  apply_offset_weights : false
+}
+""" >> $config_name/train_new.prototxt
+cat $config_name/train.prototxt >> $config_name/train_new.prototxt
+mv --force $config_name/train_new.prototxt $config_name/train.prototxt
+
 #config_name_prev=$config_name
 
-
+exit 0
 #-------------------------------------------------------
 #run
 list_dirs=`command ls -d1 "$folder_name"/*/ | command cut -f3 -d/`

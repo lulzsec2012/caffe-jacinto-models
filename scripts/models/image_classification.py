@@ -2,6 +2,14 @@ from __future__ import print_function
 import caffe
 from google.protobuf import text_format
 import ast
+#
+import os
+import sys
+def add_path(path):
+    if path not in sys.path:
+        sys.path.insert(0,path)
+add_path(os.path.join(os.path.dirname(__file__),'..'))
+#
 from models.model_libs import *
 import models.jacintonet_v2
 import models.mobilenet
@@ -29,11 +37,13 @@ def main():
       args.solver_param = ast.literal_eval(args.solver_param) 
             
     if args.config_param != None:
-      args.config_param = ast.literal_eval(args.config_param) 
+      args.config_param = ast.literal_eval(args.config_param)
+    print(args.config_param)
+    print(args.solver_param)
             
     #Start populating config_param
     config_param = OrderedDict()
-	
+
     #Names
     config_param.config_name = 'image_classification'
     config_param.model_name = "jacintonet11"
@@ -63,8 +73,8 @@ def main():
     config_param.image_width = 224
     config_param.image_height = 224
 
-    config_param.train_data = "./data/ilsvrc12_train_lmdb" 
-    config_param.test_data = "./data/ilsvrc12_val_lmdb"
+    config_param.train_data = "/data/DATA/imagenet_resize/lmdb_resize/ilsvrc12_train_lmdb" 
+    config_param.test_data = "/data/DATA/imagenet_resize/lmdb_resize/ilsvrc12_val_lmdb"
 
     config_param.stride_list = [2,2,2,2,2]
     config_param.dilation_list = [1,1,1,1,1]
@@ -91,8 +101,7 @@ def main():
     # Evaluate on whole test set.
     config_param.num_test_image = 50000
     config_param.test_batch_size = 50
-    config_param.test_batch_size_in_proto = config_param.test_batch_size      
-    
+    config_param.test_batch_size_in_proto = config_param.test_batch_size
     crop_size_to_use = args.config_param['crop_size'] if 'crop_size' in args.config_param else config_param.crop_size
     
     config_param.train_transform_param = {
@@ -339,7 +348,7 @@ def main():
 
     # Create job file.
     with open(config_param.job_file, 'w') as f:
-      f.write('cd {}\n'.format(config_param.caffe_root))
+      #f.write('cd {}\n'.format(config_param.caffe_root)) #noted by ingenic
       f.write('{} {} \\\n'.format(config_param.caffe_root, config_param.caffe_cmd))    
       if(config_param.caffe_cmd == 'test'):
         f.write('--model="{}" \\\n'.format(config_param.test_net_file))
